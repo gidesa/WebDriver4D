@@ -1,3 +1,22 @@
+{ W3C Webdriver library for Delphi
+
+  Copyright (C) 2021 Giandomenico De Sanctis gidesay@yahoo.com
+
+  This library is free software; you can redistribute it and/or modify it
+  under the terms of the GNU Library General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or (at your
+  option) any later version.
+
+  This program is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public License
+  for more details.
+
+  You should have received a copy of the GNU Library General Public License
+  along with this library; if not, write to the Free Software Foundation,
+  Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1335, USA.
+}
+
 unit TestWebDriver;
 {
 
@@ -12,98 +31,95 @@ unit TestWebDriver;
 interface
 
 uses
-  TestFramework, System.Classes, System.SysUtils, JsonDataObjects, WebDriver4D,
-  WD_http,wd_httpDelphi;
-
+  Windows, TlHelp32, TestFramework, System.Classes, System.SysUtils, Vcl.Forms,
+  JsonDataObjects,
+  Webdriver4D,  WebDriverSpec, WebClasses, WebDriverConst,
+  WD_http,
+//Delphi versione > XE2
+{$IF CompilerVersion > 23.0}
+  wd_httpDelphi;
+{$ELSE}
+  WD_httpDelphi_XE2;
+{$IFEND}
+const
+  ROOT_DIR       = '..\..\..';
+  TEST_FILES_DIR = '.\';
+  TEST_EXT_URL   = 'http://www.google.com';
+  TEST_URL       = 'file:///%s/test_webdriver.html';
+  TEST_XPATH     = '/html/body/div[1]/div[3]/form/div[1]/div[1]/div[1]/div/div[2]/input';
+  TEST_CSS       = '.FPdoLc > center:nth-child(1) > input:nth-child(1)';
 type
-  // Test methods for class TPhantomjs
 
   TestTWebDriver = class(TTestCase)
-  strict private
-    procedure StartIEDriver;
-    procedure LoginWeibo;
-    procedure StartChromeDriver;
-    procedure StartFireFox;
-    procedure StartPhantomjs;
   private
+    function prepareTestUrl(): string;
   strict protected
     FCMD: TDelphiCommand;
     FWD: TWebDriver;
   public
     procedure CheckHasError;
-    procedure TestCloseWindow;
-    procedure TestFindElementByID;
-    procedure TestFindElementByTag;
-    procedure TestFindElementByClassName;
-    procedure TestFindElement;
-    procedure TestFindElements;
-    procedure TestFindElementByLinkText;
-    procedure TestFindElementByXPath;
-    procedure TestGetCurrentWindowHandle;
-    procedure TestGetElementAttribute;
-    procedure TestSave_screenshot;
-    procedure TestSet_Window_Size;
-    procedure TestElementClick;
-    procedure TestElement_Location;
-    procedure TestElement_ScreenShort;
-    procedure TestElement_Size;
-    procedure TestFindElementsByXPath;
-    procedure TestFindElementsByTag;
-    procedure TestFindElementsByLinkText;
-    procedure TestFindElementsByID;
-    procedure TestFindElementsByClassName;
-    procedure TestGetAllSession;
-    procedure TestGet_AllCookies;
-    procedure TestQuit;
-    procedure TestRefresh;
-    procedure TestTerminatePhantomjs;
-    procedure TestClearAll;
-    procedure TestStartIEDriver;
+    function getValue(elem: TElement): string;  virtual;
   published
     procedure TestClearAllSession;
     procedure TestDeleteSession;
     procedure TestExecuteScript;
-    procedure TestExecuteASyncScript;
+    procedure TestElementExecuteScript;
     procedure TestGetAllCookies;
     procedure TestGetURL;
+    procedure TestNotExistUrl;
     procedure TestNewSession;
+    procedure TestGetAllSessions;
+    procedure TestGetCurrentWindowHandle;
+    procedure TestRefresh;
+    procedure TestQuit;
     procedure TestScreenShot;
     procedure TestGetElement;
-    procedure TestGetElementAttribute_InnerHTML;
-    procedure TestGetElements;
+    procedure TestCloseWindow;
+    procedure TestFindElementByID;
+    procedure TestFindElementByTag;
+    procedure TestFindElementByClassName;
+    procedure TestFindElementByLinkText;
+    procedure TestFindElementByXPath;
+    procedure TestFindElementByCSS;
+
+    procedure TestFindElementsByTag;
+    procedure TestFindElementsByXPath;
+    procedure TestFindElementsByClassName;
+    procedure TestFindElementsByCSS;
+
+    procedure TestGetElementAttribute;
+    procedure TestGetElementCssValue;
+    procedure TestGetElementSelected;
+    procedure TestGetElementText;
+    procedure TestGetElementTagname;
+    procedure TestGetElementDisplayed;
+
+    procedure TestSelectByText;
+    procedure TestSelectedOptions;
+    procedure TestSelectIsMultiple;
+    procedure TestSelectOptionsCount;
+
+    procedure TestTableRows;
+
+    procedure TestElementClick;
     procedure TestImplicitly_Wait;
-    procedure TestLoginWeibo;
-    procedure TestMail163;
-    procedure TestSaveElementScreen;
+    procedure TestElement_screenshot;
     procedure TestSendKey;
-    procedure TestSetWindowSize;
-  end;
-  // Test methods for class TBrowserCMD
+    procedure TestElementClear;
+    procedure TestSetWindowSize; virtual;
+    procedure TestWindowMaximize; virtual;
+    procedure TestSwitchToFrame;
 
-  TestTBrowserCMD = class(TTestCase)
-  strict private
-    FCMD: TDriverCommand;
-  private
-    FQJSON: TJsonObject;
-  public
-    function NewSession: string;
-    procedure SetUp; override;
-    procedure TearDown; override;
-  published
-    procedure TestExecuteDelete;
-    procedure TestExecuteGet;
-    procedure TestExecutePost;
+    procedure TestAlertText;
+    procedure TestAlertAccept;
+    procedure TestAlertDismiss;
+
+    procedure TestMouseAction;
+    procedure TestKeyboardAction;
+
   end;
 
-  TestTIEDriver = class(TestTWebDriver)
-  strict private
-    procedure StartIEDriver;
-  private
-  public
-    procedure SetUp; override;
-    procedure TearDown; override;
-  published
-  end;
+
 
 type
   TestFirefoxDriver = class(TestTWebDriver)
@@ -113,202 +129,136 @@ type
   public
     procedure SetUp; override;
     procedure TearDown; override;
+    function getValue(elem: TElement): string; override;
   published
   end;
 
   TestChromeDriver = class(TestTWebDriver)
   private
+    procedure StartChromeDriver;
   public
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure TestStartChromeDriver;
-    procedure StartChromeDriver;
+//    procedure TestStartChromeDriver;
   end;
 
   TestEdgeDriver = class(TestTWebDriver)
   private
     FCMD: TDelphiCommand;
+    procedure StartEdgeDriver;
   public
     procedure SetUp; override;
     procedure TearDown; override;
+    function getValue(elem: TElement): string; override;
   published
-    procedure StartEdgeDriver;
-    procedure TestMail163;
-    procedure TestYouDao;
   end;
 
-  TestPhantomjsDriver = class(TestTWebDriver)
-  strict private
-    procedure StartPhantomjs;
-  public
-    procedure SetUp; override;
-    procedure TearDown; override;
-  published
-    procedure TestExecutePhantomjsScript;
-    procedure TestYouDao;
-  end;
 
 implementation
 
 uses
-  Vcl.Imaging.pngimage;
+  Vcl.Imaging.pngimage, Vcl.Dialogs, System.StrUtils, System.Generics.Collections;
+
+
+function FindTask(ExeFileName: string): Cardinal;
+const
+  PROCESS_TERMINATE = $0001;
+var
+  ContinueLoop: BOOL;
+  FSnapshotHandle: THandle;
+  FProcessEntry32: TProcessEntry32;
+begin
+  Result := 0;
+  FSnapshotHandle := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  FProcessEntry32.dwSize := SizeOf(FProcessEntry32);
+  ContinueLoop := Process32First(FSnapshotHandle, FProcessEntry32);
+
+  while Integer(ContinueLoop) <> 0 do
+  begin
+    if ((UpperCase(ExtractFileName(FProcessEntry32.szExeFile)) =
+                                             UpperCase(ExeFileName))
+      or (UpperCase(FProcessEntry32.szExeFile) =
+                                             UpperCase(ExeFileName))) then
+    begin
+      Result := FProcessEntry32.th32ProcessID;
+      Break;
+    end;
+    ContinueLoop := Process32Next(FSnapshotHandle, FProcessEntry32);
+  end;
+  CloseHandle(FSnapshotHandle);
+end;
+
+function TestTWebDriver.prepareTestUrl(): string;
+begin
+    result := format(TEST_URL,[extractfiledir(application.ExeName)]);
+    result := ReplaceStr(result, '\', '/');
+end;
+
+function TestTWebDriver.getValue(elem: TElement): string;
+begin
+   result := elem.Attribute('value') ;
+end;
+
 
 procedure TestTWebDriver.CheckHasError;
 begin
   CheckEquals(FWD.HasError, false, FWD.ErrorMessage);
 end;
 
-procedure TestTWebDriver.StartIEDriver;
-begin
-  FWD :=TWebDriver.Create(nil);
-  FWD.Port :=8080;
-  FWD.LogFile :='d:\webdriver\ie_log.log';
-  FWD.StartDriver('..\WebDriver\IEDriverServer_x86.exe');
-end;
 
-procedure TestTWebDriver.LoginWeibo;
-var
-  hand: string;
-  Ele: TWebElement;
-  Count: integer;
-begin
-  Sleep(500);
-
-  FWD.Implicitly_Wait(3000);
-
-  FWD.Set_Window_Size(1920, 1080);
-
-  FWD.GetURL('https://passport.weibo.cn/signin/login?entry=mweibo');
-
-  // Sleep(3000);
-
-  // ele :=FWD.FindElementsByXPath('//div[@class="card card9 line-around" and @data-act-type="hover"]');
-
-  Ele := FWD.FindElementByID('loginName');
-
-  Ele.SendKey( 'test@sina.cn');
-
-  Ele := FWD.FindElementByID('loginPassword');
-
-  Ele.SendKey( 'weibopassword');
-
-  Ele := FWD.FindElementByID('loginAction');
-  Ele.Click();
-
-end;
-
-procedure TestTWebDriver.StartChromeDriver;
-begin
-  FWD :=TChromeDriver.Create(nil);
-  FWD.Port :=6666;
-  FWD.StartDriver('..\..\..\WebDriver\ChromeDriver.exe');
-end;
-
-procedure TestTWebDriver.StartFireFox;
-begin
-  fwd.LogFile :='d:\webdriver\firefox_log.log';
-  FWD.StartDriver('..\..\..\webdriver\geckodriver_x86.exe');
-end;
-
-procedure TestTWebDriver.StartPhantomjs;
-begin
-  FWD :=TPhantomjs.Create(nil);
-  FWD.LogFile :='e:\temp\phantomjs_log.log';
-  FWD.Address :='127.0.0.1';
-  FWD.StartDriver('D:\webdriver\Phantomjs.exe');
-
-end;
 
 procedure TestTWebDriver.TestClearAllSession;
 var
-  AllSession: string;
-  Json: TJsonArray;
-  Session: string;
-  I: integer;
+  ses2: string;
 begin
+  // open a second session
+  ses2:=FWD.NewSession();
+  Sleep(1000);
+  CheckHasError;
+  FWD.CloseWindow(ses2);
+  FWD.DeleteSession(ses2);
+  FWD.Clear;
 
-  AllSession := FWD.GetAllSession;
-  Json := TJsonArray.Create;
-  try
-  
-      Json.FromJSON(AllSession);
-      for I := 0 to Json.Count - 1 do
-      begin
-        Session := Json.O[I].S['id'];
-        FWD.CloseWindow(Session);
-        FWD.DeleteSession(Session);
-      end;
-   
-  finally
-    FreeAndnil(Json);
-  end;
+
+  Sleep(500);
+  CheckHasError;
+  Check(FindTask(FWD.browserexe)=0, 'Clear: Not all sessions for '+ FWD.browserexe+' closed');
 end;
 
 procedure TestTWebDriver.TestDeleteSession;
 begin
   FWD.DeleteSession;
+  Sleep(500);
+  Check(FindTask(FWD.browserexe)=0, 'DeleteSession: session for '+ FWD.browserexe +' not closed');
 end;
 
 procedure TestTWebDriver.TestExecuteScript;
 var
   xxx: string;
 begin
-  FWD.Clear;
-  FWD.NewSession;
-  FWD.Set_Window_Size(1366, 768);
   FWD.Implicitly_Wait(3000);
-  FWD.GetURL('https://passport.weibo.cn/signin/login');
-  // FWD.ExecuteScript('document.getElementById("loginPassword").value="12121212"');
-  // xxx := FWD.ExecuteScript('return document.title');
-  xxx := FWD.ExecuteScript('return document.body.innerHTML');
-
-  FWD.ScreenShot('..\temp.png');
+  FWD.GetURL(TEST_EXT_URL);
+  xxx := FWD.ExecuteScript('return document.head.innerHTML');
+  Check(Pos('<title>Google</title>', xxx)>0, 'ExecuteScript: html source not containing title "Google"');
 end;
 
 procedure TestTWebDriver.TestGetAllCookies;
 var
-  Element: TWebElement;
-  enabled: string;
   Cookies: string;
   lst: TStringList;
-  state: string;
 begin
 
-  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(1000);
 
-  //FWD.NewSession;
 
-  // FWD.Set_Window_Size(1366, 768);
-
-  FWD.GetURL('http://www.weibo.com');
-  FWD.Set_Window_Size(1366, 768);
-
-  FWD.Implicitly_Wait(1500);
-
-  Element := FWD.FindElementByID('loginname');
-  if not Element.IsEmpty then
-  begin
-
-    Element.SendKey( 'weiboaddress');
-    Element := FWD.FindElementByXPath
-      ('//input[@type="password" and @node-type="password"]');
-
-    Element.SendKey( 'aaaa');
-    Element := FWD.FindElementByXPath
-      ('//a[@action-type="btn_submit" and @node-type="submitBtn" ]');
-    if element.AttributeValue('enabled') = 'true' then
-    begin
-      element.Click();
-    end;
-
-  end;
-
-  Cookies := FWD.GetAllCookie;
+  Cookies := FWD.GetAllCookieJsonArray;
+  Check(FWD.HasError=False,'GetAllCookies: error '+fwd.ErrorMessage );
   try
     lst := TStringList.Create;
     lst.Text := Cookies;
-    lst.SaveToFile('..\..\weibo_allcookies.txt');
+    lst.SaveToFile(TEST_FILES_DIR +  'test_allcookies.txt');
   finally
     FreeAndnil(lst);
   end;
@@ -317,281 +267,320 @@ end;
 
 procedure TestTWebDriver.TestGetURL;
 begin
-  FWD.Clear;
-  FWD.NewSession;
-  FWD.Set_Window_Size(1366, 768);
-  FWD.GetURL('http://m.weibo.cn');
+  FWD.GetURL(TEST_EXT_URL);
+
+  Check(FWD.HasError=False,'GetURL: error '+fwd.ErrorMessage );
+
+end;
+
+procedure TestTWebDriver.TestNotExistUrl;
+begin
+  try
+    FWD.GetURL('http://www.notexistingxxx.com');
+  except
+    // nop
+  end;
+
+  Check(FWD.HasError=true,'GetNotExistURL: error '+fwd.ErrorMessage );
+
 end;
 
 procedure TestTWebDriver.TestNewSession;
 begin
   FWD.Clear;
   FWD.NewSession;
+
+  CheckHasError;
+  Check(FWD.SessionID<>'', 'NewSession: no session id created');
 end;
 
 procedure TestTWebDriver.TestScreenShot;
 var
-  hand: string;
-  Ele: TWebElement;
-  Json: TJsonObject;
-  Count: integer;
+  filename: string;
+  dt: TDateTimeInfoRec;
+  tt: TDateTime;
 begin
 
   Sleep(500);
-  //FWD.NewSession;
-  FWD.Set_Window_Size(1920, 1080);
-  FWD.GetURL('https://passport.weibo.cn/signin/login?entry=mweibo');
-  Sleep(3000);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.WaitForLoaded;
 
-  Ele := FWD.FindElementByXPath('//div[@class="card card9 line-around" and @data-act-type="hover"]');
-  FWD.Implicitly_Wait(3000);
-  Ele := FWD.FindElementByID('loginName');
-  Ele.SendKey('test@sina.cn');
-  Ele := FWD.FindElementByID('loginPassword');
-  Ele.SendKey( 'aaa');
-  Ele := FWD.FindElementByID('loginAction');
-  Ele.Click();
+  filename := TEST_FILES_DIR + 'test_screenshot.png';
+  DeleteFile(filename);
+  tt := Now();
+  FWD.Save_screenshot(filename);
 
-  FWD.ScreenShot('..\..\test.png');
-
+  FileGetDateTimeInfo(filename, dt );
+  Check((dt.CreationTime - tt) <5, 'ScreenShot: incorrect file generated, DATE: '+DateTimeToStr(dt.CreationTime));
 end;
 
 procedure TestTWebDriver.TestGetElement;
 var
-  Element: TWebElement;
+  Element: TElement;
 begin
   Sleep(500);
-  FWD.Clear;
-  FWD.NewSession;
-  FWD.Set_Window_Size(1366, 768);
-  FWD.GetURL('https://passport.weibo.cn/signin/login?entry=mweibo');
-  FWD.Implicitly_Wait(3000);
-  Element := FWD.FindElementByID('loginName');
-  CheckFalse(Element.IsEmpty);
-  CheckHasError;
-end;
-
-procedure TestTWebDriver.TestGetElements;
-var
-  divs: TWebElements;
-  I: integer;
-  Item: TJsonObject;
-  Element: TWebElement;
-begin
-  FWD.Clear;
-  FWD.NewSession;
-  FWD.Set_Window_Size(1366, 768);
-  FWD.GetURL('http://www.weibo.com');
-  Sleep(3000);
-
-  Element := FWD.FindElementByID('loginname');
-  if Element.IsEmpty then
-  begin
-    Element.SendKey('test@sina.cn');
-    Element := FWD.FindElementByXPath
-      ('//input[@type="password" and @node-type="password"]');
-
-    Element.SendKey( 'aaa');
-    Element := FWD.FindElementByXPath
-      ('//a[@action-type="btn_submit" and @node-type="submitBtn" ]');
-    if Element.AttributeValue( 'enabled') = 'true' then
-    begin
-
-      Element.Click;
-    end;
-  end;
-  Sleep(5000);
-  divs := FWD.FindElementsByXPath('//div[@action-type="feed_list_item"]');
-  for I := 0 to divs.Count - 1 do
-  begin
-    Element :=divs.Items[I];
-    FWD.ScreenShot( 'E:\temp\' + inttostr(I) + '.png');
-  end;
-end;
-
-procedure TestTWebDriver.TestLoginWeibo;
-var
-  Element: TWebElement;
-  enabled: string;
-  SessionID: string;
-begin
-  Sleep(500);
-
-  FWD.TimeOut := 120 * 1000;
-  FWD.Clear;
-  SessionID := FWD.NewSession;
-  FWD.PageLoadTimeout(90 * 1000);
-  CheckHasError;
-  // FWD.Set_Window_Size(1366, 768);
-
-  FWD.GetURL('http://www.weibo.com');
-  CheckHasError;
-  FWD.Set_Window_Size(1366, 768);
-  CheckHasError;
-  Sleep(3000);
-  Element := FWD.FindElementByID('loginname');
-  CheckHasError;
-  if Element.IsEmpty then
-  begin
-
-    Element.SendKey( 'test@sina.cn');
-    CheckHasError;
-    Element := FWD.FindElementByXPath
-      ('//input[@type="password" and @node-type="password"]');
-    CheckHasError;
-
-    Element.SendKey( 'aaaa');
-    CheckHasError;
-    Element := FWD.FindElementByXPath
-      ('//a[@action-type="btn_submit" and @node-type="submitBtn" ]');
-    CheckHasError;
-    if Element.AttributeValue( 'enabled') = 'true' then
-    begin
-      FWD.Set_Window_Size(1366, 768);
-      CheckHasError;
-      Element.Click;
-      CheckHasError;
-    end;
-
-  end;
-
-  FWD.ScreenShot('e:\temp\weibo.png');
-
-end;
-
-procedure TestTWebDriver.TestSaveElementScreen;
-var
-  Element: TWebElement;
-begin
-  Sleep(500);
-  FWD.Clear;
-  FWD.NewSession;
-
-  FWD.Set_Window_Size(1366, 768);
-
-  FWD.GetURL('http://www.weibo.com');
-
-  Sleep(5000);
+  FWD.GetURL(TEST_EXT_URL);
   FWD.Implicitly_Wait(3000);
 
-  Element := FWD.FindElementByXPath('//div[@class="W_unlogin_v4"]');
-  Element.ScreenShot( 'e:\temp\login.png');
+  // various Google page elements
+  Element := nil;
+  Element := FWD.FindElementByXPath(TEST_XPATH);
+  CheckHasError;
+  Element.Free;
+
+
+  Element := nil;
+  Element := FWD.FindElementByClassName('gLFyf');
+  CheckHasError;
+  Element.Free;
+
+  Element := nil;
+  Element := FWD.FindElementByName('q');
+  CheckHasError;
+  Element.Free;
+
+  Element := nil;
+  Element := FWD.FindElementByLinkText('Gmail');
+  CheckHasError;
+  Element.Free;
+end;
+
+
+
+procedure TestTWebDriver.TestElement_screenshot;
+var
+  Element: TElement;
+  filename: string;
+  dt: TDateTimeInfoRec;
+  tt: TDateTime;
+
+begin
+  Sleep(500);
+
+  FWD.GetURL(prepareTestUrl);
+  FWD.Implicitly_Wait(500);
+
+  filename := TEST_FILES_DIR + 'test_element_screenshot.png';
+  DeleteFile(filename);
+
+  Element := FWD.FindElementByID('sele');
+  tt:= Now();
+
+  FWD.Element_ScreenShot(Element, filename);
+
+  FileGetDateTimeInfo(filename, dt );
+
+  Check((dt.CreationTime - tt)<3, 'Element_ScreenShot: incorrect file generated, file DATE: '+dateTimeToStr(dt.CreationTime)+ ' date: ' + TimeToStr(tt));
 end;
 
 procedure TestTWebDriver.TestSendKey;
 var
-  Element: TWebElement;
+  Element: TElement;
+  v, at: string;
 begin
   Sleep(500);
-  FWD.Clear;
-  FWD.NewSession;
 
 
-  FWD.Set_Window_Size(1366, 768);
-
-
-  FWD.GetURL('https://passport.weibo.cn/signin/login?entry=mweibo');
+  FWD.GetURL(TEST_EXT_URL);
 
   Sleep(3000);
 
-  Element := FWD.FindElementByID('loginName');
-  Element.SendKey( 'test@sina.cn');
-  Element := FWD.FindElementByID('loginPassword');
-  Element.SendKey( 'aaa');
-  Element := FWD.FindElementByID('loginAction');
-  Element.Click;
-  Sleep(3000);
-  FWD.ScreenShot('..\..\weibo.png');
+  Element := FWD.FindElementByXPath(TEST_XPATH);
+  v := 'ferrari italia';
+  FWD.SendKey(Element, v);
+  Element.executeScript('this.blur();');
 
+  Sleep(1000);
+  at :=  getValue(Element);
+  // Firefox return the original value (visible getting the element outerHTML),
+  // not the current value. In Firefox use this JS line:
+  //      at := Element.executeScript('return this.value;');
+  Element.Free;
+
+  Check(at=v, 'Sendkey: value error: <<'+at+'>>');
 end;
+
+procedure TestTWebDriver.TestElementClear;
+var
+  Element: TElement;
+  v, at: string;
+begin
+  Sleep(500);
+
+
+  FWD.GetURL(TEST_EXT_URL);
+
+  Sleep(3000);
+
+  Element := FWD.FindElementByXPath(TEST_XPATH);
+  v := 'ferrari italia';
+  FWD.SendKey(Element, v);
+  Element.executeScript('this.blur();');
+
+  Sleep(1000);
+  FWD.ElementClear(Element);
+  Sleep(1000);
+  at :=  getValue(Element);
+  Element.Free;
+
+  Check(at='', 'ElementClear: value not empty: <<'+at+'>>');
+end;
+
 
 procedure TestTWebDriver.TestSetWindowSize;
+const
+  REQ = '640x480';
+  REQ_W = 640;
+  REQ_H = 480;
+var
+  w, h: Integer;
+  pw, ph: Single;
 begin
-  FWD.Clear;
-  FWD.NewSession;
-  FWD.Set_Window_Size(1366, 768);
+  FWD.Set_Window_Size(640, 480);
+  Sleep(500);
+  w:= StrToInt(FWD.ExecuteScript('return (window.outerWidth);'));
+  h:= StrToInt(FWD.ExecuteScript('return (window.outerHeight);'));
+  pw := w/REQ_w;
+  ph := h/REQ_H;
+  Check(  ((0.95<=pw) and (pw<=1.05) and (0.95<=ph) and (ph<=1.05)),
+         'SetWindowSize: different window size: '+inttostr(w)+'x'+inttostr(h)+' requested: '+req);
 end;
 
-procedure TestTWebDriver.TestCloseWindow;
+procedure TestTWebDriver.TestWindowMaximize;
 var
-  ParamSessionID: string;
+  w, h: Integer;
+  pw, ph: Single;
 begin
-  // TODO: Setup method call parameters
-  FWD.CloseWindow(ParamSessionID);
-  CheckEquals(FWD.HasError, false, FWD.ErrorMessage);
-  // TODO: Validate method results
+  FWD.WindowMaximize;
+  CheckHasError;
+  w:= StrToInt(FWD.ExecuteScript('return (window.outerWidth);'));
+  h:= StrToInt(FWD.ExecuteScript('return (window.outerHeight);'));
+
+  pw := w/screen.Width;
+  ph := h/screen.Height;
+  Check(  ((0.95<=pw) and (pw<=1.05) and (0.95<=ph) and (ph<=1.05)),
+         'WindowMaximize: window not maximized to screen: '+inttostr(w)+'x'+inttostr(h)+' screen: '+
+            IntToStr(Screen.Width)+'x'+IntToStr(Screen.Height));
+
+
+end;
+
+
+
+procedure TestTWebDriver.TestCloseWindow;
+begin
+  FWD.CloseWindow();
+  Sleep(500);
+
+  CheckHasError;
+  Check(FindTask(FWD.browserexe)=0, 'Closewindow: Not all windows for '+ FWD.browserexe+' closed');
+end;
+
+procedure TestTWebDriver.TestElementExecuteScript;
+var
+  element: TElement;
+  xxx: string;
+begin
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  // Google research string input field
+  Element := FWD.FindElementByXPath(TEST_XPATH);
+  //GC(element);
+  xxx := element.ExecuteScript('return (this.tagName);');
+  Check(xxx='INPUT', 'ElementExecuteScript: result invalid ->'+xxx);
 end;
 
 procedure TestTWebDriver.TestFindElementByID;
 var
-  Element: TWebElement;
-  ID: string;
+  element: TElement;
 begin
-  // TODO: Setup method call parameters
-  //Element := FWD.FindElementByID(ID);
-  // TODO: Validate method results
+  Sleep(500);
+  FWD.GetURL(prepareTestUrl);
+  FWD.Implicitly_Wait(1000);
+
+  Element := FWD.FindElementByID('testalert');
+  CheckHasError;
+  Check(element<>nil, 'Element not found');
 end;
 
 procedure TestTWebDriver.TestFindElementByTag;
 var
-  Element: TWebElement;
-  TagName: string;
+  element: TElement;
 begin
-  // TODO: Setup method call parameters
-  //Element := FWD.FindElementByTag(TagName);
-  // TODO: Validate method results
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  Element := nil;
+  Element := FWD.FindElementByTag('head');
+  CheckHasError;
+  Check(element<>nil, 'Element not found');
 end;
 
 procedure TestTWebDriver.TestFindElementByClassName;
 var
-  Element: TWebElement;
-  ClasName: string;
+  element: TElement;
 begin
-  // TODO: Setup method call parameters
-  //Element := FWD.FindElementByClassName(ClasName);
-  // TODO: Validate method results
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  Element := nil;
+  Element := FWD.FindElementByClassName('gLFyf');
+  CheckHasError;
+  Check(element<>nil, 'Element not found');
+
 end;
 
-procedure TestTWebDriver.TestFindElement;
-var
-  WebElement: TWebElement;
-  KeyName: string;
-  usingName: string;
-begin
-  // TODO: Setup method call parameters
-  //WebElement := FWD.FindElement(usingName, KeyName);
-  // TODO: Validate method results
-end;
-
-procedure TestTWebDriver.TestFindElements;
-var
-  Elements: TWebElements;
-  KeyName: string;
-  usingName: string;
-begin
-  // TODO: Setup method call parameters
-  //Elements := FWD.FindElements(usingName, KeyName);
-  // TODO: Validate method results
-end;
 
 procedure TestTWebDriver.TestFindElementByLinkText;
 var
-  Element: TWebElement;
-  LinkText: string;
+  element: TElement;
 begin
-  // TODO: Setup method call parameters
-  Element := FWD.FindElementByLinkText(LinkText);
-  // TODO: Validate method results
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  Element := nil;
+  Element := FWD.FindElementByLinkText('Gmail');
+  CheckHasError;
+  Check(element<>nil, 'Element not found');
+  element.Free;
 end;
 
 procedure TestTWebDriver.TestFindElementByXPath;
 var
-  WebElement: TWebElement;
-  XPath: string;
+  element: TElement;
 begin
-  // TODO: Setup method call parameters
-  WebElement := FWD.FindElementByXPath(XPath);
-  // TODO: Validate method results
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  Element := nil;
+  Element := FWD.FindElementByXPath(TEST_XPATH);
+
+
+  CheckHasError;
+  Check(element<>nil, 'Element not found');
+  element.Free;
+end;
+
+procedure TestTWebDriver.TestFindElementByCSS;
+var
+  element: TElement;
+begin
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  Element := nil;
+  // search button
+  Element := FWD.FindElementByCSS(TEST_CSS);
+  CheckHasError;
+  Check(element<>nil, 'Element not found');
+  element.Free;
 end;
 
 procedure TestTWebDriver.TestGetCurrentWindowHandle;
@@ -599,352 +588,602 @@ var
   ReturnValue: string;
 begin
   ReturnValue := FWD.GetCurrentWindowHandle;
-  // TODO: Validate method results
+  CheckHasError;
+  Check(ReturnValue<>'' , 'No window handle returned');
+
 end;
 
 procedure TestTWebDriver.TestGetElementAttribute;
 var
-  ReturnValue: string;
-  attributename: string;
-  Element: TWebElement;
+  element: TElement;
+  vv: string;
 begin
-  // TODO: Setup method call parameters
-  // Element.AttributeValue( attributename);
-  // TODO: Validate method results
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  Element := nil;
+  // submit button
+  Element := FWD.FindElementByCSS(TEST_CSS);
+  vv := '';
+  vv := FWD.GetElementAttribute(Element, 'type');
+  CheckHasError;
+  Check(vv = 'submit','Getelementattribute: wrong attribute (type="'+vv+'"');
 end;
 
-procedure TestTWebDriver.TestSave_screenshot;
-var
-  FileName: string;
-begin
-  // TODO: Setup method call parameters
-  //FWD.ScreenShot(FileName);
-  // TODO: Validate method results
-end;
 
-procedure TestTWebDriver.TestSet_Window_Size;
-var
-  WindowHandle: string;
-  Height: integer;
-  Width: integer;
-begin
-  // TODO: Setup method call parameters
-  FWD.Set_Window_Size(Width, Height, WindowHandle);
-  // TODO: Validate method results
-end;
 
 procedure TestTWebDriver.TestElementClick;
 var
-  Element: TWebElement;
+  Element: TElement;
 begin
-  // TODO: Setup method call parameters
-  Element.Click;
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
 
-  // TODO: Validate method results
+  // Google research string input field
+  Element := FWD.FindElementByXPath(TEST_XPATH);
+  FWD.SendKey(Element,'ferrari');
+  Sleep(500);
+  Element.executeScript('this.blur();');
+  Element.Free;
+  Element := nil;
+  Element := FWD.FindElementByName('btnK');
+  FWD.ElementClick(Element);
+  Sleep(1000);
+//  CheckHasError;
+  Element.Free;
+  Check(FWD.FindElementByXPath('//h3[text()="Sito ufficiale del marchio Ferrari"]')<>nil, 'ElementClick: click not done');
 end;
 
-procedure TestTWebDriver.TestElement_Location;
-var
-  Location: string;
-  Element: TWebElement;
-begin
-  // TODO: Setup method call parameters
-  Location := Element.Location;
-  // TODO: Validate method results
-end;
-
-procedure TestTWebDriver.TestElement_ScreenShort;
-var
-  FileName: string;
-  Element: TWebElement;
-begin
-  // TODO: Setup method call parameters
-  Element.ScreenShot( FileName);
-  // TODO: Validate method results
-end;
-
-procedure TestTWebDriver.TestElement_Size;
-var
-  ReturnValue: string;
-  Element: TWebElement;
-begin
-  // TODO: Setup method call parameters
-  //element.Size
-  //ReturnValue := FWD.Element_Size(Element);
-  // TODO: Validate method results
-end;
 
 procedure TestTWebDriver.TestFindElementsByXPath;
 var
-  Elements: TWebElements;
-  XPath: string;
+  elements: TObjectList<TElement>;
 begin
-  // TODO: Setup method call parameters
-  //Elements := FWD.FindElementsByXPath(XPath);
-  // TODO: Validate method results
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  elements := nil;
+  elements := FWD.FindElementsByXPath('//div');
+  CheckHasError;
+  Check(elements.Count>0, 'FindElementsByXPath: elements not found');
+  Check((elements.Items[0].tagname='div') and (elements.Items[elements.Count-1].tagname='div'),
+          'FindElementsByXPath: elements not of XPath expr. "//div"');
+  elements.Free;
 end;
 
 procedure TestTWebDriver.TestFindElementsByTag;
 var
-  Elements: TWebElements;
-  TagName: string;
+  elements: TObjectList<TElement>;
 begin
-  // TODO: Setup method call parameters
-  //Elements := FWD.FindElementsByTag(TagName);
-  // TODO: Validate method results
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  elements := nil;
+  elements := FWD.FindElementsByTag('input');
+  CheckHasError;
+  Check(elements.Count>0, 'FindElementsByTag: elements not found');
+  Check((elements.Items[0].tagname='input') and (elements.Items[elements.Count-1].tagname='input'),
+          'FindElementsByTag: elements not of tag "input"');
+  elements.Free;
+
 end;
 
-procedure TestTWebDriver.TestFindElementsByLinkText;
+procedure TestTWebDriver.TestFindElementsByCSS;
 var
-  Elements: TWebElements;
-  LinkText: string;
+  elements: TObjectList<TElement>;
 begin
-  // TODO: Setup method call parameters
-  Elements := FWD.FindElementsByLinkText(LinkText);
-  // TODO: Validate method results
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  elements := nil;
+  elements := FWD.FindElementsByCSS('div');
+  CheckHasError;
+  Check(elements.Count>0, 'FindElementsByCSS: elements not found');
+  Check((elements.Items[0].tagname='div') and (elements.Items[elements.Count-1].tagname='div'),
+          'FindElementsByCSS: elements not of CSS expr. "div"');
+  elements.Free;
 end;
 
-procedure TestTWebDriver.TestFindElementsByID;
-var
-  Elements: TWebElements;
-  ID: string;
-begin
-  // TODO: Setup method call parameters
-  //Elements := FWD.FindElementsByID(ID);
-  // TODO: Validate method results
-end;
 
 procedure TestTWebDriver.TestFindElementsByClassName;
 var
-  Elements: TWebElements;
-  ClasName: string;
+  elements: TObjectList<TElement>;
+  val1, val2: string;
 begin
-  // TODO: Setup method call parameters
-  //Elements := FWD.FindElementsByClassName(ClasName);
-  // TODO: Validate method results
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  elements := nil;
+  elements := FWD.FindElementsByClassName('gsfi');
+  CheckHasError;
+  Check(elements.Count>0, 'FindElementsByClassName: elements not found');
+  val1 := elements.Items[0].Attribute('class');
+  val2 := elements.Items[elements.Count-1].Attribute('class');
+  Check((Pos('gsfi', val1)>0) and (pos('gsfi', val2)>0),
+          'FindElementsByClassName: elements not of class "gsfi", val1: '+val1+' val2: '+val2);
+  elements.Free;
 end;
 
-procedure TestTWebDriver.TestGetAllSession;
+procedure TestTWebDriver.TestGetAllSessions;
 var
-  AllSession: string;
+  Sessions: string;
+  ses2: string;
+  Json: TJsonArray;
 begin
-  AllSession := FWD.GetAllSession;
-  // TODO: Validate method results
-end;
+  // open a second session
+  ses2:=FWD.NewSession();
+  CheckHasError;
 
-procedure TestTWebDriver.TestGet_AllCookies;
-var
-  AllCookie: string;
-begin
-  AllCookie := FWD.GetAllCookie;
-  // TODO: Validate method results
-end;
+
+  Sleep(500);
+  sessions := FWD.GetAllSessions;
+  CheckHasError;
+  Check(Sessions<>'', 'GetAllSessions: no sessions returned ');
+  if Sessions <> '' then
+  begin
+      Json := TJsonArray.Create;
+      Json.FromJSON(sessions);
+      Check(Json.Count=2, 'GetAllSessions: sessions count not equal to 2:  ' + IntToStr(Json.Count));
+      Json.Free;
+  end;
+  FWD.CloseWindow(ses2);
+  FWD.DeleteSession(ses2);
+  CheckHasError;
+ end;
+
+
 
 procedure TestTWebDriver.TestImplicitly_Wait;
-var
-  waitTime: Double;
 begin
-  // TODO: Setup method call parameters
   FWD.Implicitly_Wait(1000);
-  FWD.GetURL('http://www.microsoft.com/');
-  // TODO: Validate method results
+  FWD.GetURL(TEST_EXT_URL);
+
+  CheckHasError;
 end;
 
 procedure TestTWebDriver.TestQuit;
 begin
   FWD.Quit;
-  // TODO: Validate method results
+  Sleep(500);
+  CheckHasError;
+  Check(FindTask(FWD.browserexe)=0, 'Quit: browser '+ FWD.browserexe+' not closed');
 end;
 
 procedure TestTWebDriver.TestRefresh;
 var
-  ParamSessionID: string;
+  Element:TElement;
+  vv:string;
 begin
-  // TODO: Setup method call parameters
-  FWD.Refresh(ParamSessionID);
-  // TODO: Validate method results
-end;
-
-procedure TestTWebDriver.TestTerminatePhantomjs;
-begin
-  FWD.TerminateWebDriver;
-  // TODO: Validate method results
-end;
-
-procedure TestTWebDriver.TestClearAll;
-begin
-  FWD.Clear;
-  CheckEquals(FWD.HasError, false, FWD.ErrorMessage);
-end;
-
-procedure TestTWebDriver.TestExecuteASyncScript;
-var
-  script: string;
-begin
-  //FWD.Set_Window_Size(1366, 768);
-  //FWD.Implicitly_Wait(3000);
-  FWD.GetURL('https://passport.weibo.cn/signin/login');
-  script :=' var text '+
-  'text=""; for(var i=0;i<50;i++){'+
-  ' text=text';
-
-  FWD.ExecuteScriptByASync(script);
-
-end;
-
-procedure TestTWebDriver.TestGetElementAttribute_InnerHTML;
-var
-  Element:TWebElement;
-  html:string;
-begin
-  FWD.GetURL('http://www.yahoo.com/');
-  Element :=FWD.FindElementByTag('body');
-  html :=Element.AttributeValue('innerHTML');
-
-end;
-
-procedure TestTWebDriver.TestMail163;
-var
-  Element:TWebElement;
-begin
-  //FWD.Port := 7777;
   Sleep(500);
-  FWD.GetURL('http://mail.163.com');
-  FWD.SwitchToFrame('x-URS-iframe');
-  Sleep(3000);
-  Element := FWD.FindElementByXPath('//input[@name="email" and @data-loginname="loginEmail"]');
-  Element.SendKey( 'demo');
-  Element := FWD.FindElementByXPath('//input[@name="password" and @type="password"]');
-  Element.SendKey( 'demo');
-  Element := FWD.FindElementByID('dologin');
-  Element.Click;
-  FWD.Clear;
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
 
+  // Google research string input field
+  Element := FWD.FindElementByXPath(TEST_XPATH);
+  Element.SendKey('dalkgjldfjlgkjdlkd');
+  Sleep(500);
+  Element.executeScript('this.blur();');
+  Element.Free;
+
+  FWD.Refresh();
+  CheckHasError;
+  Element := FWD.FindElementByXPath(TEST_XPATH);
+  vv := getValue(Element);
+  Element.Free;
+
+  Check(vv='','Refresh: test field not empty: '+vv);
 end;
 
-procedure TestTWebDriver.TestStartIEDriver;
-begin
 
-end;
-
-function TestTBrowserCMD.NewSession: string;
-const
-  NEW_SESSION_PARAM = '{"desiredCapabilities": {"browserName":"phantomjs",' +
-    '"phantomjs.page.settings.userAgent": "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1667.0 Safari/537.36"'
-    + ' , "platform": "windows", "version": "", "javascriptEnabled": true},' +
-    '"capabilities": {"browserName": "phantomjs", "firstMatch": [],' +
-    '"phantomjs.page.settings.userAgent": "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1667.0 Safari/537.36"'
-    + ',"platform": "windows", "alwaysMatch": {}, "javascriptEnabled": true, "version": ""}}';
+procedure  TestTWebDriver.TestGetElementCssValue;
 var
-  command: string;
-  status: string;
-  resp: string;
+  element: TElement;
+  vv: string;
 begin
-  command := 'http://127.0.0.1:81/wd/hub/session';
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
 
-  //resp := FCMD.ExecutePost(command, NEW_SESSION_PARAM);
+  Element := nil;
+  // submit button
+  Element := FWD.FindElementByCSS(TEST_CSS);
+  vv := '';
+  vv := FWD.GetElementCssValue(Element, 'font-size');
+  element.Free;
+  CheckHasError;
+  Check(vv = '14px','GetelementCssValue: wrong property value (property "border"="'+vv+'")');
 
-  FQJSON.Parse(PChar(resp));
-  if FQJSON.S['status'] = '0' then
-  begin
-    result := FQJSON.S['sessionId'];
-  end
-  else
-  begin
-    raise Exception.Create('new session error:' + resp);
+end;
+
+procedure  TestTWebDriver.TestGetElementText;
+var
+  element: TElement;
+  vv: string;
+begin
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  Element := nil;
+  Element := FWD.FindElementByXPath('//a[contains(.,"Pubblicit")]');
+  vv := '';
+  vv := FWD.GetElementText(Element);
+  element.Free;
+  CheckHasError;
+  Check(vv = 'Pubblicit‡','GetelementText: wrong text value: "'+vv+'")');
+
+end;
+
+procedure  TestTWebDriver.TestGetElementTagname;
+var
+  element: TElement;
+  vv: string;
+begin
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  Element := nil;
+  Element := FWD.FindElementByCSS(TEST_CSS);
+  vv := '';
+  vv := FWD.GetElementTagname(Element);
+  element.Free;
+  CheckHasError;
+  Check(vv = 'input','GetelementTagname: wrong tag name: "'+vv+'")');
+
+end;
+
+procedure  TestTWebDriver.TestGetElementDisplayed;
+var
+  element: TElement;
+  vv: string;
+begin
+  FWD.GetURL(prepareTestUrl);
+  Sleep(800);
+
+  Element := nil;
+  Element := FWD.FindElementByID('notenabled');
+  vv := '';
+  vv := FWD.GetElementDisplayed(element);
+  element.Free;
+  CheckHasError;
+  Check(vv = 'false','GetelementDisplayed: wrong not selected value: '+vv);
+
+
+end;
+
+
+
+procedure  TestTWebDriver.TestGetElementSelected;
+var
+  element: TElement;
+  vv: string;
+begin
+  Sleep(500);
+  FWD.GetURL(TEST_EXT_URL);
+  FWD.Implicitly_Wait(3000);
+
+  Element := nil;
+  Element := FWD.FindElementByXPath(TEST_XPATH);
+  vv := '';
+  vv := FWD.GetElementSelected(element);
+  element.Free;
+  CheckHasError;
+  Check(vv = 'false','GetelementSelected: wrong not selected value: '+vv);
+
+
+end;
+
+procedure TestTWebDriver.TestSelectByText;
+const
+  OPTVAL = 'val3';
+var
+  Element:TElement;
+  vv:string;
+begin
+  FWD.GetURL(prepareTestUrl);
+  Sleep(800);
+
+  Element :=FWD.FindElementByID('selesingle');
+  Element.selectByText(OPTVAL);
+  Sleep(100);
+  vv :=Element.executeScript('return (this.options[this.selectedIndex].text);');
+  element.Free;
+
+  Check(vv=OPTVAL,'SelectByText: select element not changed, value: '+vv);
+
+end;
+
+procedure TestTWebDriver.TestSelectedOptions;
+const
+  OPTVAL = 'text2';
+var
+  Element:TElement;
+  vv:string;
+begin
+  FWD.GetURL(prepareTestUrl);
+  Sleep(800);
+  Element :=FWD.FindElementByID('sele');
+  vv := Element.SelectedOptionText();
+  Element.Free;
+  Check(vv=OPTVAL,'SelectedOptions: wrong selected options , value: '+vv);
+
+end;
+
+procedure TestTWebDriver.TestSelectIsMultiple;
+var
+  Element:TElement;
+  vv:Boolean;
+begin
+  FWD.GetURL(prepareTestUrl);
+  Sleep(800);
+  Element :=FWD.FindElementByID('sele');
+  vv := Element.SelectIsMultiple;
+  Element.Free;
+  Check(vv=true,'SelectIsMultiple: wrong multiple property , value: ' + BoolToStr(vv));
+
+  Element :=FWD.FindElementByID('selesingle');
+  vv := Element.SelectIsMultiple;
+  Element.Free;
+  Check(vv=false,'SelectIsMultiple: wrong not multiple property , value: '+ BoolToStr(vv) );
+
+end;
+
+procedure TestTWebDriver.TestSelectOptionsCount;
+var
+  Element:TElement;
+  vv:Integer;
+begin
+  FWD.GetURL(prepareTestUrl);
+  Sleep(800);
+  Element :=FWD.FindElementByID('sele');
+  vv := Element.SelectOptionsCount;
+  Element.Free;
+  Check(vv=3,'SelectOptionsCount: wrong options count , value: ' + IntToStr(vv));
+
+end;
+
+procedure TestTWebDriver.TestTableRows;
+var
+  Element:TElement;
+  vv:Integer;
+begin
+  FWD.GetURL(prepareTestUrl);
+  Sleep(800);
+  Element :=FWD.FindElementByID('testtable');
+  vv := Element.TableRows;
+  Element.Free;
+  Check(vv=7,'TableRows: wrong rows count , value: ' + IntToStr(vv));
+
+end;
+
+
+procedure TestTWebDriver.TestSwitchToFrame;
+var
+  element: TElement;
+begin
+  FWD.GetURL(prepareTestUrl);
+  FWD.Implicitly_Wait(500);
+
+  Element := nil;
+  Element := FWD.FindElementByXPath('//iframe[1]');
+
+  FWD.SwitchToFrame(element);
+  CheckHasError;
+  element.Free;
+  Element := nil;
+  Element := FWD.FindElementByID('testalert');
+
+  Check(element<>nil,'SwitchToFrame: element in new frame not found ');
+  Check(element.text='Test iframe', 'SwitchToFrame: wrong text of element in new frame  ');
+  element.Free;
+
+  FWD.SwitchToDefaultContent;
+  CheckHasError;
+  Element := nil;
+  Element := FWD.FindElementByXPath('//iframe[1]');
+
+  Check(element<>nil,'SwitchToDefaultContent: element in top context/frame not found ');
+  element.Free;
+
+end;
+
+
+procedure TestTWebDriver.TestAlertText;
+var
+  Element:TElement;
+  ale: TAlert;
+  vv:string;
+begin
+  FWD.GetURL(prepareTestUrl);
+  Sleep(800);
+  Element :=FWD.FindElementByID('testalert');
+  Element.Click;
+  Element.Free;
+  ale := FWD.SwitchToAlert;
+  vv := ale.text;
+  ale.Free;
+  Check(vv='test webdriver alert','AlertText: wrong text , value: ' + vv);
+
+end;
+
+procedure TestTWebDriver.TestAlertAccept;
+var
+  Element:TElement;
+  ale: TAlert;
+begin
+  FWD.GetURL(prepareTestUrl);
+  Sleep(800);
+  Element :=FWD.FindElementByID('testalert');
+  Element.Click;
+  Element.Free;
+  Sleep(1000);
+  ale := FWD.SwitchToAlert;
+  CheckHasError;
+  ale.Accept;
+  ale.Free;
+  ale:=nil;
+  try
+    ale := FWD.SwitchToAlert;
+  except
+    // ok, alert not found
+  end;
+  Check(ale=nil,'AlertAccept: alert not closed');
+
+end;
+
+procedure TestTWebDriver.TestAlertDismiss;
+var
+  Element:TElement;
+  ale: TAlert;
+begin
+  FWD.GetURL(prepareTestUrl);
+  Sleep(800);
+  Element :=FWD.FindElementByID('testalert');
+  Element.Click;
+  Element.Free;
+  Sleep(1000);
+  ale := FWD.SwitchToAlert;
+  CheckHasError;
+  ale.Dismiss;
+  ale.Free;
+  ale:=nil;
+  try
+    ale := FWD.SwitchToAlert;
+  except
+    // ok, alert not found
+  end;
+  Check(ale=nil,'AlertDismiss: alert not closed');
+
+
+end;
+
+procedure TestTWebDriver.TestMouseAction;
+var
+  Element:TElement;
+  ma, ma1, ma2: TMouseAction;
+  maList: TMouseActionContainer;
+
+begin
+  maList := TMouseActionContainer.create('mouse1', aptMouse);
+
+
+  try
+    FWD.GetURL(prepareTestUrl);
+    Sleep(800);
+    Element :=FWD.FindElementByID('testalert');
+
+
+// esegue un clic sul pulsante
+    ma := TMouseAction.create(apPointerMove);
+    ma.duration := 500;
+    ma.x := 10;
+    ma.y := 10;
+    ma.origin := Element.ElementID;
+    maList.Add(ma);
+
+
+    ma1 := TMouseAction.create(apPointerDown);
+    ma1.duration := 150;
+    maList.Add(ma1);
+
+    ma2 := TMouseAction.create(apPointerUp);
+    ma2.duration := 150;
+    maList.Add(ma2);
+
+
+
+    FWD.processActions(maList);
+
+    sleep(3000);
+
+
+    CheckHasError;
+
+
+  finally
+    maList.Free;
+    Element.Free;
+
   end;
 end;
 
-procedure TestTBrowserCMD.SetUp;
-begin
-  FCMD := TDriverCommand.Create(nil);
-  FQJSON := TJsonObject.Create;
-end;
-
-procedure TestTBrowserCMD.TearDown;
-begin
-  FreeAndnil(FQJSON);
-  FreeAndnil(FCMD);
-end;
-
-procedure TestTBrowserCMD.TestExecuteDelete;
+procedure TestTWebDriver.TestKeyboardAction;
 var
-  command: string;
+  Element:TElement;
+  ma, maP,maP1, maP2,
+  ma2: TKeyboardAction;
+  maList: TKeyboardActionContainer;
+
+  vv: string;
 begin
-  // TODO: Setup method call parameters
-  FCMD.ExecuteDelete(command);
-  // TODO: Validate method results
+  maList := TKeyboardActionContainer.create('key1');
+
+
+  try
+    FWD.GetURL(prepareTestUrl);
+    Sleep(800);
+    Element :=FWD.FindElementByID('testkey');
+    Element.executeScript('this.focus();');
+
+
+// invia un carattere ad un campo text
+    ma := TKeyboardAction.create(akKeyDown, 'X');
+    maList.Add(ma);
+
+
+    maP := TKeyboardAction.create(akPause, #0);
+    maP1 := TKeyboardAction.create(akPause, #0);
+    maP2 := TKeyboardAction.create(akPause, #0);
+    // 3 pauses
+    maList.Add(maP);
+    maList.Add(maP1);
+    maList.Add(maP2);
+
+    ma2 := TKeyboardAction.create(akKeyUp, 'X');
+    maList.Add(ma2);
+
+
+
+    FWD.processActions(maList);
+
+    sleep(1000);
+
+    CheckHasError;
+    vv:= getValue(Element);
+
+    Check(vv='X', 'KeyboardAction: text field value not valid: '+vv);
+
+  finally
+    maList.Free;
+    Element.Free;
+
+  end;
 end;
+{**************************************************************************}
 
-procedure TestTBrowserCMD.TestExecuteGet;
-var
-  ReturnValue: string;
-  URL: string;
-begin
-  // TODO: Setup method call parameters
-  ReturnValue := FCMD.ExecuteGet(URL);
-  // TODO: Validate method results
-end;
+{***************************************************************************}
 
-procedure TestTBrowserCMD.TestExecutePost;
-var
-  ReturnValue: string;
-  Data: string;
-  URL: string;
-  Session: string;
-begin
-  // TODO: Setup method call parameters
-  // Session :=NewSession;
-  // URL:='http://127.0.0.1:81/wd/hub/session/'+Session+'/url';
-  URL := 'http://127.0.0.1:81/wd/hub/session/377b8d50-27b4-11e7-bd60-4bd9a6b64703/url';
-
-  Data := '{"url":"http://s.weibo.com/weibo/%25E5%259B%25BD%25E5%258A%25A1%25E9%2599%25A2%25E5%2587%258F%25E7%25A8%258E?topnav=1&wvr=6&b=1","sessionid":"7e893fd0-27b4-11e7-bd60-4bd9a6b64703"}';
-  ReturnValue := FCMD.ExecutePost(URL, Data);
-  // TODO: Validate method results
-end;
-
-procedure TestTIEDriver.SetUp;
-begin
-  FCMD :=TDelphiCommand.Create(nil);
-  StartIEDriver;
-
-end;
-
-procedure TestTIEDriver.TearDown;
-begin
-  FWD.clear;
-  if Assigned(FWD) then
-    FreeAndNil(FWD);
-  if Assigned(FCMD) then
-    FreeAndNil(fCMD);
-
-end;
-
-procedure TestTIEDriver.StartIEDriver;
-
-begin
-  FWD :=TIEDriver.Create(nil);
-  FWD.Port :=5555;
-  FWD.Cmd :=FCMD;
-  FWD.StartDriver('..\..\..\WebDriver\IeDriverServer_x86.exe');
-  FWD.NewSession();
-
-end;
-
+{***************************************************************************}
 procedure TestFirefoxDriver.SetUp;
 begin
   FCMD :=TDelphiCommand.Create(nil);
   StartFireFox;
-  
+
 end;
 
 procedure TestFirefoxDriver.TearDown;
 begin
-  FWD.Clear;
-  if Assigned(FCMD) then
-    FreeAndNil(FCMD);
   if Assigned(FWD) then
     FreeAndNil(FWD);
+  if Assigned(FCMD) then
+    FreeAndNil(FCMD);
 end;
 
 procedure TestFirefoxDriver.StartFireFox;
@@ -953,11 +1192,16 @@ begin
   FWD :=TFireFoxDriver.Create(nil);
   FWD.Port :=4444;
   FWD.Cmd :=FCMD;
-  (FWD as TFireFoxDriver).BrowserFileName := 'C:\Program Files\Mozilla Firefox\firefox.exe';
-  FWD.StartDriver('..\..\..\WebDriver\geckodriver_x86.exe');
+  FWD.DriverDir := ROOT_DIR+  '\WebDriver\';
+  FWD.StartDriver();
   FWD.NewSession;
 end;
 
+function TestFirefoxDriver.getValue(elem: TElement): string;
+begin
+   result := elem.PropertyHtml('value') ;
+end;
+{***************************************************************************}
 procedure TestChromeDriver.SetUp;
 begin
   FCMD :=TDelphiCommand.Create(nil);
@@ -972,19 +1216,6 @@ begin
 
 end;
 
-procedure TestChromeDriver.TestStartChromeDriver;
-var
-  Chrome:TChromeDriver;
-begin
-  Chrome :=TChromeDriver.Create(nil);
-  Try
-    Chrome.Port :=6666;
-    Chrome.StartDriver('..\..\..\WebDriver\ChromeDriver.exe');
-    Chrome.NewSession();
-  Finally
-    FreeAndNil(Chrome);
-  End;
-end;
 
 procedure TestChromeDriver.StartChromeDriver;
 var
@@ -994,12 +1225,15 @@ begin
   FWD :=Chrome;
   Chrome.Port :=6666;
   Chrome.Cmd :=FCMD;
-  Chrome.StartDriver('..\..\..\WebDriver\ChromeDriver.exe');
+  Chrome.Timeout := 60000;
+  Chrome.DriverDir := ROOT_DIR + '\WebDriver\';
+  Chrome.StartDriver();
   Chrome.NewSession();
 
 
 end;
 
+{***************************************************************************}
 procedure TestEdgeDriver.SetUp;
 begin
   FCMD :=TDelphiCommand.Create(nil);
@@ -1014,8 +1248,12 @@ begin
   Edge :=FWD as TEdgeDriver;
   Edge.Port :=7777;
   Edge.Cmd :=FCMD;
-  Edge.StartDriver('..\..\..\WebDriver\MicrosoftWebDriver.exe');
+  Edge.Timeout := 5000;
+  Edge.DriverDir := ROOT_DIR + '\WebDriver\';
+  Edge.StartDriver();
+
   Edge.NewSession();
+  Edge.Implicitly_Wait(3000);
 end;
 
 procedure TestEdgeDriver.TearDown;
@@ -1023,159 +1261,20 @@ begin
   FreeAndNil(FWd);
   if Assigned(FCMD) then
     FreeAndNil(FCMD);
-
 end;
 
-procedure TestEdgeDriver.TestMail163;
-var
-  WD:TEdgeDriver;
-  Element:TWebElement;
-  Script:string;
-
+function TestEdgeDriver.getValue(elem: TElement): string;
 begin
-  WD := TEdgeDriver.Create(nil);
-  try
-    WD.Address := 'localhost';
-    //WD.Port := 7777;
-    WD.StartDriver('d:\webdriver\MicrosoftWebDriver.exe');//¬∑æ∂’˝»∑
-    WD.Path :='';
-    Sleep(500);
-    WD.NewSession;
-    WD.GetURL('https://mail.163.com');
-    WD.SwitchToFrame('x-URS-iframe');
-
-
-    Sleep(3000);
-    Element := WD.FindElementByXPath('//input[@name="email" and @class="j-inputtext dlemail"');
-    Element.SendKey( 'demo');
-    Element := WD.FindElementByXPath('//input[@name="password" and @type="password"]');
-    Element.SendKey( 'demo');
-    Element := WD.FindElementByID('dologin');
-    Element.Click;
-  finally
-    FreeAndNil(WD);
-  end;
+   result := elem.PropertyHtml('value') ;
 end;
 
-procedure TestEdgeDriver.TestYouDao;
-var
-  WD:TEdgeDriver;
-  Element:TWebElement;
-  Script:string;
-  Text :string;
-begin
-  WD := TEdgeDriver.Create(nil);
-  try
-    WD.Address := 'localhost';
-    //WD.Port := 7777;
-    WD.StartDriver('d:\webdriver\MicrosoftWebDriver.exe');//¬∑æ∂’˝»∑
-    WD.Path :='';
-    Sleep(500);
-    WD.NewSession;
-    WD.GetURL('http://fanyi.youdao.com/?keyfrom=dict2.index');
 
-    Element := WD.FindElementByID('inputOriginal');
-    Element.SendKey('This is a Book');
-    Sleep(2000);
-    Element :=Wd.FindElementByID('transTarget');
-    Text :=Element.AttributeValue('innerText');
-    CheckEquals(Text,'’‚ «“ª±æ È');
-    Element := WD.FindElementByID('inputDelete');
-    Element.Click;
-
-    Element := WD.FindElementByID('inputOriginal');
-    Element.SendKey('an Apple a day keeps doctor away.');
-    Sleep(2000);
-    Element :=Wd.FindElementByID('transTarget');
-    Text :=Element.AttributeValue('innerText');
-    CheckEquals(Text,'“ª»’“ª∆ªπ˚£¨“Ω…˙‘∂¿ÎŒ“°£');
-
-
-  finally
-    FreeAndNil(WD);
-  end;
-end;
-
-procedure TestPhantomjsDriver.SetUp;
-begin
-  FCMD :=TDelphiCommand.Create(nil);
-  StartPhantomjs;
-end;
-
-procedure TestPhantomjsDriver.StartPhantomjs;
-
-begin
-  FWD :=TPhantomjs.Create(nil);
-  FWD.Port :=8888;
-  FWD.StartDriver('D:\WebDriver\Phantomjs.exe');
-  FWD.Cmd :=FCMD;
-  FWD.NewSession();
-
-end;
-
-procedure TestPhantomjsDriver.TearDown;
-begin
-  FWD.clear;
-  if Assigned(FWD) then
-    FreeAndNil(FWD);
-  if Assigned(FCMD) then
-    FreeAndNil(fCMD);
-
-end;
-
-procedure TestPhantomjsDriver.TestExecutePhantomjsScript;
-var
-  script:string;
-  Ip:string;
-  port:Integer;
-  Phantomjs:TPhantomjs;
-  str:string;
-
-begin
-  Ip :='118.163.120.182';
-  port := 58837;
-  script :=format('phantom.setProxy("%s",%d)',[Ip,port]);
-  Phantomjs :=FWD as TPhantomjs;
-  str :=Phantomjs.Execute_Phantom_Script(script);
-  Phantomjs.GetURL('https://www.baidu.com/s?wd=ip&rsv_spt=1&rsv_iqid=0xd14ff912000052e4&issp=1&f=8&rsv_bp=0&rsv_idx=2&ie=utf-8&tn=baiduhome_pg&rsv_enter=1&rsv_sug3=2&rsv_sug2=0&inputT=544&rsv_sug4=544');
-  Phantomjs.ScreenShot('e:\temp\agent_test.png');
-end;
-
-procedure TestPhantomjsDriver.TestYouDao;
-var
-  Element:TWebElement;
-  Text :string;
-begin
-  FWD.NewSession;
-
-  FWD.GetURL('http://fanyi.youdao.com/?keyfrom=dict2.index');
-
-  Element := FWD.FindElementByID('inputOriginal');
-  Element.SendKey('This is a Book');
-  Sleep(2000);
-  Element :=FWD.FindElementByID('transTarget');
-  Text :=trim(Element.AttributeValue('innerText'));
-  CheckEquals(Text,'’‚ «“ª±æ È');
-  Element := FWD.FindElementByID('inputDelete');
-  Element.Click;
-
-  Element := FWD.FindElementByID('inputOriginal');
-  Element.SendKey('an Apple a day keeps doctor away.');
-  Sleep(2000);
-  Element :=FWD.FindElementByID('transTarget');
-  Text :=Trim(Element.AttributeValue('innerText'));
-  CheckEquals(Text,'“ª»’“ª∆ªπ˚£¨“Ω…˙‘∂¿ÎŒ“°£');
-
-end;
-
+{****************************************************************************}
 initialization
 
 // Register any test cases with the test runner
-RegisterTest(TestTBrowserCMD.Suite);
-RegisterTest(TestTIEDriver.Suite);
 RegisterTest(TestFirefoxDriver.Suite);
 RegisterTest(TestChromeDriver.Suite);
 RegisterTest(TestEdgeDriver.Suite);
-RegisterTest(TestPhantomjsDriver.Suite);
 
 end.
