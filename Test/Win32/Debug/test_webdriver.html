@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+
+
+<html>
+
+<head>
+
+        <title>Webdriver tests</title>
+	<script>
+// Return an array of the selected opion values
+// select is an HTML select element
+function getSelectValues(select) {
+  var result ="";
+  var options = select && select.options;
+  var opt;
+
+  for (var i=0, iLen=options.length; i<iLen; i++) {
+    opt = options[i];
+
+    if (opt.selected) {
+          if (result != "") {result = result + "|"};
+          result=result + opt.text; 
+    }
+  }
+  return result;
+}
+	</script>
+</head>
+<body>
+Select with multiple selection
+<select id="sele" multiple >
+  <option>text1</option>
+  <option value="opt 2 value" selected>text2</option>
+  <option value="opt 3 value">text3</option>
+</select>
+<button onclick="
+  var el = document.getElementsByTagName('select')[0];
+  alert(getSelectValues(el));
+">Show selected values</button><br/>
+<br/>
+Select with single selection
+<select id="selesingle" >
+  <option selected>val1</option>
+  <option value="opt 2 value">val2</option>
+  <option value="opt 3 value">val3</option>
+</select>
+<br/>
+<br/>
+<button id="testalert" title="Test webdriver alert" onclick="alert('test webdriver alert');" >
+	Test webdriver alert</button><br/>
+<br/>
+<input type="text" id="testkey" >
+<br/>
+<br/>
+ <iframe id="testiframe" src="test_iframe.html" height="200" width="300"></iframe> 
+<br/>
+<br/>
+<table id="testtable">
+  <tr>
+    <th>Company</th>
+    <th>Contact</th>
+    <th>Country</th>
+  </tr>
+  <tr>
+    <td>Alfreds Futterkiste</td>
+    <td>Maria Anders</td>
+    <td>Germany</td>
+  </tr>
+  <tr>
+    <td>Centro comercial Moctezuma</td>
+    <td>Francisco Chang</td>
+    <td>Mexico</td>
+  </tr>
+  <tr>
+    <td>Ernst Handel</td>
+    <td>Roland Mendel</td>
+    <td>Austria</td>
+  </tr>
+  <tr>
+    <td>Island Trading</td>
+    <td>Helen Bennett</td>
+    <td>UK</td>
+  </tr>
+  <tr>
+    <td>Laughing Bacchus Winecellars</td>
+    <td>Yoshi Tannamuri</td>
+    <td>Canada</td>
+  </tr>
+  <tr>
+    <td>Magazzini Alimentari Riuniti</td>
+    <td>Giovanni Rovelli</td>
+    <td>Italy</td>
+  </tr>
+</table>
+</br></br>
+
+<a id="LINK" href="testWebElements.htm" onclick="alert('click on link ok'); " >Test LINK</a> 
+</br>
+<button id="notenabled" title="Test enabled" onclick="alert('test enabled alert');" style="display:none" >
+	Test enabled</button>
+<br/>
+
+</body>
+</html>
