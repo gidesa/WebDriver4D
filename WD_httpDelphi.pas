@@ -1,10 +1,31 @@
+{ W3C Webdriver library for Delphi
+
+  Copyright (C) 2021 Giandomenico De Sanctis gidesay@yahoo.com
+
+  This library is free software; you can redistribute it and/or modify it
+  under the terms of the GNU Library General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or (at your
+  option) any later version.
+
+  This program is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public License
+  for more details.
+
+  You should have received a copy of the GNU Library General Public License
+  along with this library; if not, write to the Free Software Foundation,
+  Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1335, USA.
+}
+
 unit WD_httpDelphi;
 
 interface
 
 uses
-  Classes, Sysutils, System.Net.HttpClient, System.Net.URLClient,
-  System.NetConsts, WD_http;
+  Classes, Sysutils,
+  System.Net.HttpClient, System.Net.URLClient,
+  System.NetConsts,
+  WD_http;
 
 type
   TDelphiCommand = class(TDriverCommand)
@@ -87,9 +108,9 @@ end;
 
 procedure TDelphiCommand.InitHeader;
 begin
-  Fhttp.UserAgent := 'Delphi http Client';
-  Fhttp.ContentType := 'application/json';
-  Fhttp.Accept := '*/*';
+   Fhttp.UserAgent := 'Delphi http Client';
+   Fhttp.ContentType := 'application/json';
+   Fhttp.Accept := '*/*';
 end;
 
 procedure TDelphiCommand.SetTimeout(const Value: integer);
